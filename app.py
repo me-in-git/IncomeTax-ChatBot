@@ -43,9 +43,7 @@ TOP_K = 3
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 FALLBACK_URLS = [
     "https://www.incometax.gov.in",
-    "https://www.incometaxindia.gov.in",
-    "https://cleartax.in",
-    "https://taxguru.in",
+    "https://www.incometaxindia.gov.in"   
 ]
 
 @st.cache_resource
