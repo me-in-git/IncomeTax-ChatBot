@@ -1,7 +1,3 @@
-"""
-Run this once after putting your PDFs in data/pdfs/
-    python build_index.py
-"""
 import os
 import pypdf
 import chromadb
@@ -34,11 +30,10 @@ def main():
     pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.lower().endswith(".pdf")]
     if not pdf_files:
         print(f"No PDFs found in {PDF_FOLDER}/")
-        print("Add Income Tax PDFs from https://www.incometax.gov.in then re-run.")
         return
 
     print(f"Found: {pdf_files}\n")
-    print("Loading embedding model (downloads ~90 MB once)...")
+    print("Loading embedding model")
     model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
     client = chromadb.PersistentClient(path=DB_FOLDER)
@@ -73,7 +68,6 @@ def main():
         )
 
     print(f"\nDone — {len(chunks)} chunks saved to {DB_FOLDER}/")
-    print("Now run:  streamlit run app.py")
 
 
 if __name__ == "__main__":
