@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from sentence_transformers import SentenceTransformer
 import fitz
+import numpy as np
+
+from retrieval import Retriever
 
 TEXTS = {
     "setup": ("Setup", "सेटअप"),
@@ -37,9 +40,9 @@ def _(key, hindi):
     eng, hin = TEXTS.get(key, (key, key))
     return hin if hindi else eng
 
-DB_FOLDER = "vector_db"
+DB_FOLDER = "index"
 COLLECTION_NAME = "tax_docs"
-TOP_K = 3
+TOP_K = 5
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 FALLBACK_URLS = [
     "https://www.incometax.gov.in",
@@ -94,22 +97,26 @@ def download_and_process_pdf(pdf_url):
         st.warning(f"Could not download PDF from {pdf_url}: {e}")
         return None
 
-def retrieve_relevant_chunks(question, collection, model, top_k=TOP_K):
-    q_vec = model.encode(question).tolist()
-    results = collection.query(
-        query_embeddings=[q_vec],
-        n_results=top_k,
-        include=["documents", "metadatas", "distances"],
+@st.cache_resource
+def load_retriever(_collection, _model):
+    """BM25 + dense hybrid retriever over every chunk stored in the vector DB."""
+    data = _collection.get(include=["documents", "metadatas", "embeddings"])
+    emb = np.asarray(data["embeddings"], dtype=np.float32)
+    emb /= np.linalg.norm(emb, axis=1, keepdims=True) + 1e-12
+    retriever = Retriever(
+        data["documents"], emb, lambda q: _model.encode(q, normalize_embeddings=True)
     )
+    return retriever, data["metadatas"]
+
+
+def retrieve_relevant_chunks(question, collection, model, top_k=TOP_K):
+    retriever, metas = load_retriever(collection, model)
+    q_vec = model.encode(question, normalize_embeddings=True)
     chunks = []
-    for doc, meta, dist in zip(
-        results["documents"][0],
-        results["metadatas"][0],
-        results["distances"][0],
-    ):
-        score = round(max(0.0, 1.0 - dist / 2.0), 3)
-        chunks.append({"text": doc, "source": meta["source"],
-                       "page": meta["page"], "score": score})
+    for idx in retriever.search(question, k=top_k, mode="hybrid"):
+        score = round(float(max(0.0, retriever.embeddings[idx] @ q_vec)), 3)  # cosine, for display
+        chunks.append({"text": retriever.chunks[idx], "source": metas[idx]["source"],
+                       "page": metas[idx]["page"], "score": score})
     return chunks
 
 def build_prompt(question, chunks, web_results=None, chat_history=None, hindi=False):

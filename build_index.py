@@ -1,12 +1,11 @@
 import os
 import pypdf
-import chromadb
-from sentence_transformers import SentenceTransformer
 
-PDF_FOLDER    = "data/pdfs"
-DB_FOLDER     = "vector_db"
-CHUNK_SIZE    = 400
-CHUNK_OVERLAP = 50
+PDF_FOLDER    = "data"
+DB_FOLDER     = "index"
+# see eval/retrieval_eval.py
+CHUNK_SIZE    = 1200
+CHUNK_OVERLAP = 150
 
 
 def extract_text(path):
@@ -27,6 +26,9 @@ def chunk_text(text, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
 
 
 def main():
+    import chromadb
+    from sentence_transformers import SentenceTransformer
+
     pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.lower().endswith(".pdf")]
     if not pdf_files:
         print(f"No PDFs found in {PDF_FOLDER}/")
