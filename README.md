@@ -1,6 +1,6 @@
 # Income Tax Chatbot
 
-A chatbot for Indian income tax filing questions, built with Aikya Oruganti for our SMAI course
+A chatbot for Indian income tax filing questions for our SMAI course
 (report: `Income Tax Chatbot.pdf`). It answers in English or Hindi from the official ITR instruction
 documents and shows which PDF and page each answer came from.
 
