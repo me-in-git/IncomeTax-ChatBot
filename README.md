@@ -20,7 +20,7 @@ A question counts as retrieved if a returned chunk contains that phrase.
 
 | setup | found in top 3 | found in top 5 |
 |---|---|---|
-| embeddings only, 400-char chunks (original) | 32% | 36% |
+| embeddings only, 400-char chunks | 32% | 36% |
 | hybrid BM25 + embeddings, 1200-char chunks | 60% | 68% |
 
 Full results for each chunk size and retriever are in `eval/retrieval_results.json`. With only 25
